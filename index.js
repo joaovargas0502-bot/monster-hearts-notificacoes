@@ -1,6 +1,8 @@
 import express from "express";
 import cors from "cors";
-import admin from "firebase-admin";
+import { initializeApp, cert } from "firebase-admin/app";
+import { getFirestore } from "firebase-admin/firestore";
+import { getMessaging } from "firebase-admin/messaging";
 
 const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
 const senhaMestre = process.env.SENHA_MESTRE;
@@ -12,11 +14,11 @@ if (!senhaMestre) {
   console.error("Faltou configurar a variável de ambiente SENHA_MESTRE.");
 }
 
-admin.initializeApp({
-  credential: admin.credential.cert(JSON.parse(serviceAccountJson || "{}")),
+initializeApp({
+  credential: cert(JSON.parse(serviceAccountJson || "{}")),
 });
 
-const db = admin.firestore();
+const db = getFirestore();
 const app = express();
 
 app.use(cors());
@@ -44,7 +46,7 @@ app.post("/enviar-notificacao", async (req, res) => {
       return res.json({ ok: true, enviados: 0, aviso: "Nenhum aparelho cadastrado ainda." });
     }
 
-    const resposta = await admin.messaging().sendEachForMulticast({
+    const resposta = await getMessaging().sendEachForMulticast({
       tokens,
       notification: {
         title: "🎭 Aviso do Mestre",
